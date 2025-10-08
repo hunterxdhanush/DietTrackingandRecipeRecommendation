@@ -1,0 +1,24 @@
+{
+  "name": "diet-tracking-recipe-recommendation",
+  "version": "1.0.0",
+  "description": "Diet Tracking and Recipe Recommendation Website",
+  "scripts": {
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "init-db": "cd backend && node init-db.js",
+    "start-backend": "cd backend && npm start",
+    "start-frontend": "cd frontend && npm start",
+    "dev-backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run dev-backend\" \"npm run start-frontend\""
+  },
+  "keywords": [
+    "diet",
+    "nutrition",
+    "recipe",
+    "tracking"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
