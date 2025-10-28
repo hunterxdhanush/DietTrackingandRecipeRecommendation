@@ -8,6 +8,18 @@ const router = express.Router();
 // Get recipe recommendations based on goals
 router.post('/recommendations', authenticateToken, async (req, res) => {
   try {
+    // Get user's info including country
+    const userResult = await pool.query(
+      'SELECT country FROM users WHERE id = $1',
+      [req.user.id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userCountry = userResult.rows[0].country || 'International';
+
     // Get user's goals and today's progress
     const goalsResult = await pool.query(
       'SELECT * FROM daily_goals WHERE user_id = $1',
@@ -43,15 +55,16 @@ router.post('/recommendations', authenticateToken, async (req, res) => {
     };
 
     // Prepare prompt for AI
-    const prompt = `You are a nutrition expert. Based on the following remaining daily nutrition goals, suggest 3 healthy recipe recommendations:
+    const prompt = `You are a nutrition expert. Based on the following remaining daily nutrition goals and the user's country, suggest 3 healthy recipe recommendations that are popular or traditional in ${userCountry}:
 
+User Location: ${userCountry}
 Remaining Goals:
 - Calories: ${remaining.calories} kcal
 - Protein: ${remaining.protein}g
 - Carbohydrates: ${remaining.carbs}g
 - Fat: ${remaining.fat}g
 
-Please provide 3 recipe suggestions that would help meet these remaining goals. For each recipe, include:
+Please provide 3 recipe suggestions from ${userCountry} cuisine (or suitable for ${userCountry}) that would help meet these remaining goals. For each recipe, include:
 1. Recipe name
 2. Brief description
 3. Estimated nutrition values (calories, protein, carbs, fat)
@@ -142,6 +155,11 @@ Format your response as a JSON array of recipes with the following structure:
 
     // Call AI API (Groq uses OpenAI-compatible format)
     try {
+      const https = require('https');
+      const httpsAgent = new https.Agent({
+        rejectUnauthorized: false // Disable SSL verification (only for development)
+      });
+
       const aiResponse = await axios.post(
         AI_API_URL,
         {
@@ -162,7 +180,9 @@ Format your response as a JSON array of recipes with the following structure:
           headers: {
             'Authorization': `Bearer ${AI_API_KEY}`,
             'Content-Type': 'application/json'
-          }
+          },
+          httpsAgent: httpsAgent,
+          timeout: 30000 // 30 second timeout
         }
       );
 

@@ -4,6 +4,9 @@ import { AuthProvider, AuthContext } from './context/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import ProgressHistory from './pages/ProgressHistory';
+import Profile from './pages/Profile';
+import BmiTracker from './pages/BmiTracker';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -64,7 +67,36 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <ProgressHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bmi-tracker"
+            element={
+              <ProtectedRoute>
+                <BmiTracker />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/" 
+            element={
+              <Navigate to="/login" />
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { nutritionAPI } from '../services/api';
+import axios from 'axios';
 import NutritionTracker from '../components/NutritionTracker';
 import FoodLogForm from '../components/FoodLogForm';
 import FoodLogList from '../components/FoodLogList';
@@ -14,17 +15,29 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showFoodForm, setShowFoodForm] = useState(false);
   const [showRecipes, setShowRecipes] = useState(false);
+  const [bmi, setBmi] = useState(null);
   const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [progressRes, logsRes] = await Promise.all([
+      const token = localStorage.getItem('token');
+      
+      const [progressRes, logsRes, profileRes] = await Promise.all([
         nutritionAPI.getTodayProgress(),
         nutritionAPI.getTodayLogs(),
+        axios.get('http://localhost:5000/api/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
+      
       setProgress(progressRes.data);
       setLogs(logsRes.data);
+      
+      // Set BMI from profile data
+      if (profileRes.data.bmi) {
+        setBmi(profileRes.data.bmi);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -71,14 +84,36 @@ const Dashboard = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Diet Tracker</h1>
-              <p className="text-sm text-gray-600">Welcome back, {user?.name}!</p>
+              {user?.name && (
+                <p className="text-sm text-gray-600">Welcome back, {user.name}!</p>
+              )}
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Logout
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/bmi-tracker')}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+              >
+                BMI: {bmi ? parseFloat(bmi).toFixed(1) : 'N/A'}
+              </button>
+              <button
+                onClick={() => navigate('/history')}
+                className="px-4 py-2 text-sm font-medium text-white bg-secondary rounded-lg hover:bg-blue-600"
+              >
+                30-Day History
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>

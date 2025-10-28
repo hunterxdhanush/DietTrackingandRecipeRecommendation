@@ -168,4 +168,40 @@ router.delete('/log/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Get 30-day progress history
+router.get('/history/30days', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        log_date,
+        SUM(calories) as total_calories,
+        SUM(protein) as total_protein,
+        SUM(carbs) as total_carbs,
+        SUM(fat) as total_fat
+       FROM food_logs
+       WHERE user_id = $1 
+         AND log_date >= CURRENT_DATE - INTERVAL '30 days'
+       GROUP BY log_date
+       ORDER BY log_date DESC`,
+      [req.user.id]
+    );
+
+    // Get goals for comparison
+    const goalsResult = await pool.query(
+      'SELECT * FROM daily_goals WHERE user_id = $1',
+      [req.user.id]
+    );
+
+    const goals = goalsResult.rows[0] || { calories: 2000, protein: 150, carbs: 250, fat: 65 };
+
+    res.json({
+      history: result.rows,
+      goals: goals
+    });
+  } catch (error) {
+    console.error('Error fetching history:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

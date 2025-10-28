@@ -9,17 +9,37 @@ const Signup = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    country: '',
+    age: '',
+    gender: '',
+    height: '',
+    weight: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [bmi, setBmi] = useState(null);
   const navigate = useNavigate();
   const { login } = React.useContext(AuthContext);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+
+    // Calculate BMI in real-time
+    if (name === 'height' || name === 'weight') {
+      const h = name === 'height' ? value : formData.height;
+      const w = name === 'weight' ? value : formData.weight;
+      if (h && w && h > 0 && w > 0) {
+        const heightInMeters = h / 100;
+        const calculatedBmi = (w / (heightInMeters * heightInMeters)).toFixed(2);
+        setBmi(calculatedBmi);
+      } else {
+        setBmi(null);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -34,6 +54,26 @@ const Signup = () => {
 
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!formData.country || !formData.age || !formData.gender || !formData.height || !formData.weight) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (formData.age < 1 || formData.age > 150) {
+      setError('Please enter a valid age');
+      return;
+    }
+
+    if (formData.height < 50 || formData.height > 300) {
+      setError('Please enter a valid height (50-300 cm)');
+      return;
+    }
+
+    if (formData.weight < 20 || formData.weight > 500) {
+      setError('Please enter a valid weight (20-500 kg)');
       return;
     }
 
@@ -99,6 +139,128 @@ const Signup = () => {
                 onChange={handleChange}
               />
             </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+                  Country
+                </label>
+                <select
+                  id="country"
+                  name="country"
+                  required
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  value={formData.country}
+                  onChange={handleChange}
+                >
+                  <option value="">Select country</option>
+                  <option value="USA">United States</option>
+                  <option value="UK">United Kingdom</option>
+                  <option value="Canada">Canada</option>
+                  <option value="Australia">Australia</option>
+                  <option value="India">India</option>
+                  <option value="China">China</option>
+                  <option value="Japan">Japan</option>
+                  <option value="Germany">Germany</option>
+                  <option value="France">France</option>
+                  <option value="Italy">Italy</option>
+                  <option value="Spain">Spain</option>
+                  <option value="Mexico">Mexico</option>
+                  <option value="Brazil">Brazil</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
+                  Age
+                </label>
+                <input
+                  id="age"
+                  name="age"
+                  type="number"
+                  required
+                  min="1"
+                  max="150"
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Age"
+                  value={formData.age}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+                Gender
+              </label>
+              <select
+                id="gender"
+                name="gender"
+                required
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                value={formData.gender}
+                onChange={handleChange}
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-1">
+                  Height (cm)
+                </label>
+                <input
+                  id="height"
+                  name="height"
+                  type="number"
+                  required
+                  min="50"
+                  max="300"
+                  step="0.1"
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Height in cm"
+                  value={formData.height}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
+                  Weight (kg)
+                </label>
+                <input
+                  id="weight"
+                  name="weight"
+                  type="number"
+                  required
+                  min="20"
+                  max="500"
+                  step="0.1"
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Weight in kg"
+                  value={formData.weight}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            {bmi && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  <span className="font-semibold">Your BMI:</span> {bmi} 
+                  <span className="ml-2">
+                    {bmi < 18.5 && '(Underweight)'}
+                    {bmi >= 18.5 && bmi < 25 && '(Normal)'}
+                    {bmi >= 25 && bmi < 30 && '(Overweight)'}
+                    {bmi >= 30 && '(Obese)'}
+                  </span>
+                </p>
+              </div>
+            )}
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password

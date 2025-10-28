@@ -35,6 +35,7 @@ export const nutritionAPI = {
   getTodayLogs: () => api.get('/nutrition/logs/today'),
   getTodayProgress: () => api.get('/nutrition/progress/today'),
   deleteLog: (id) => api.delete(`/nutrition/log/${id}`),
+  getHistory: () => api.get('/nutrition/history/30days'),
 };
 
 export const recipeAPI = {
